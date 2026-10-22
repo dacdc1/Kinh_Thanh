@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load bible_tags %}
+
+{% block title %}Kế Hoạch Đọc Toàn Bộ Kinh Thánh Trong 365 Ngày (1 Năm){% endblock %}
+
+{% block content %}
+<main class="canon-section" style="max-width: 900px;">
+  <div style="text-align: center; margin-bottom: 2.5rem;">
+    <div style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); font-weight: 700; margin-bottom: 0.5rem;">
+      Đồng hành cùng Lời Chúa suốt năm
+    </div>
+    <h1 style="font-family: var(--font-body); font-size: 2.2rem; color: var(--accent); margin-bottom: 0.5rem;">
+      Kế Hoạch Đọc Kinh Thánh 1 Năm
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 650px; margin: 0 auto 1.5rem;">
+      Lộ trình 365 ngày giúp bạn đọc trọn vẹn 73 cuốn Kinh Thánh Công Giáo: mỗi ngày gồm 1 đoạn Cựu Ước, 1 khúc Thánh Vịnh và 1 trích đoạn Tân Ước.
+    </p>
+
+    <!-- Progress Bar (for logged-in user) -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; max-width: 550px; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">
+        <span>Tiến độ của bạn:</span>
+        <span id="plan-stat-text" style="color: var(--accent);">{{ user_completed_days|length }}/365 ngày ({{ completion_percent }}%)</span>
+      </div>
+      <div style="width: 100%; height: 10px; background: var(--bg-subtle); border-radius: 5px; overflow: hidden;">
+        <div id="plan-progress-bar" style="height: 100%; width: {{ completion_percent }}%; background: linear-gradient(90deg, var(--gold), var(--accent)); transition: width 0.3s ease;"></div>
+      </div>
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+        Hôm nay là <strong>Ngày {{ current_day_number }}</strong> trong năm.
+        <a href="#day-{{ current_day_number }}" style="color: var(--accent); font-weight: 600; margin-left: 0.5rem;">
+          Cuộn đến ngày hôm nay ↓
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reading Days List -->
+  <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+    {% for day in days %}
+    <div id="day-{{ day.day_number }}" class="day-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; {% if day.day_number == current_day_number %}border: 2px solid var(--gold); background: var(--bg-surface);{% endif %}">
+      
+      <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+        <!-- Checkbox -->
+        <input type="checkbox"
+               class="plan-checkbox"
+               data-day-id="{{ day.id }}"
+               {% if day.day_number|in_set:user_completed_days %}checked{% endif %}
+               style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--accent);">
+
+        <div>
+          <div style="font-weight: 700; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+            <span>Ngày {{ day.day_number }}</span>
+            {% if day.day_number == current_day_number %}
+            <span style="font-size: 0.75rem; background: var(--gold); color: #fff; padding: 1px 7px; border-radius: 10px; font-weight: 600;">Hôm nay</span>
+            {% endif %}
+          </div>
+          <div style="font-size: 0.925rem; color: var(--accent); margin-top: 0.2rem; font-weight: 500;">
+            {{ day.readings_label }}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <a href="{% url 'bible:home' %}" class="tool-btn" style="font-size: 0.8rem;">
+          Đọc bài Lời Chúa →
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.plan-checkbox').forEach(cb => {
+    cb.addEventListener('change', async (e) => {
+      const isAuth = document.body.getAttribute('data-auth') === 'true';
+      if (!isAuth) {
+        e.preventDefault();
+        cb.checked = !cb.checked;
+        showGuestLoginModal();
+        return;
+      }
+
+      const dayId = cb.getAttribute('data-day-id');
+      const csrf = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+      try {
+        const res = await fetch(`/ke-hoach-doc/toggle/${dayId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrf,
+          }
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('plan-stat-text').innerText = `${data.total_completed}/365 ngày (${data.percent}%)`;
+          document.getElementById('plan-progress-bar').style.width = `${data.percent}%`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+</script>
+{% endblock %}

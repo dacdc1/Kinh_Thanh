@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load bible_tags %}
+
+{% block title %}{{ book.name }} - Chương {{ chapter.number }} | Kinh Thánh Công Giáo{% endblock %}
+
+{% block content %}
+<style>
+  .verse-item:target {
+    background-color: rgba(234, 179, 8, 0.3) !important;
+    box-shadow: 0 0 0 5px rgba(234, 179, 8, 0.25);
+    border-radius: 6px;
+    animation: targetPulse 2.5s ease-out;
+    scroll-margin-top: 100px;
+  }
+  @keyframes targetPulse {
+    0% { background-color: rgba(234, 179, 8, 0.75); }
+    50% { background-color: rgba(234, 179, 8, 0.45); }
+    100% { background-color: rgba(234, 179, 8, 0.3); }
+  }
+</style>
+
+<!-- Reader Toolbar -->
+<div class="reader-toolbar">
+  <div class="toolbar-inner">
+    <!-- Chapter Quick Selector -->
+    <div class="toolbar-group">
+      <select onchange="location = this.value;" style="padding: 0.35rem 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-weight: 600; font-size: 0.85rem; outline: none;">
+        {% for b in all_books %}
+        <option value="{% url 'bible:reader_book' b.slug %}" {% if b.id == book.id %}selected{% endif %}>
+          {{ b.order_num }}. {{ b.name }} ({{ b.code }})
+        </option>
+        {% endfor %}
+      </select>
+
+      <select onchange="location = this.value;" style="padding: 0.35rem 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-weight: 600; font-size: 0.85rem; outline: none;">
+        {% for ch in all_chapters %}
+        <option value="{% url 'bible:reader' book.slug ch.number %}" {% if ch.number == chapter.number %}selected{% endif %}>
+          Chương {{ ch.number }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Typography Controls -->
+    <div class="toolbar-group">
+      <button id="btn-font-decrease" class="tool-btn" title="Thu nhỏ cỡ chữ">A-</button>
+      <button id="btn-font-increase" class="tool-btn" title="Phóng to cỡ chữ">A+</button>
+      <button id="btn-font-family" class="tool-btn" title="Đổi kiểu phông chữ (Serif / Sans)">Phông</button>
+    </div>
+
+    <!-- Theme Switchers -->
+    <div class="toolbar-group">
+      <div class="theme-pill light" data-set-theme="light" title="Chế độ Sáng"></div>
+      <div class="theme-pill sepia" data-set-theme="sepia" title="Chế độ Giấy Ngà (Ấm áp)"></div>
+      <div class="theme-pill dark" data-set-theme="dark" title="Chế độ Tối (Đọc đêm)"></div>
+    </div>
+  </div>
+</div>
+
+<main class="reader-container">
+  <!-- Reader Header -->
+  <header class="reader-header">
+    <h1 class="book-title">{{ book.name }}</h1>
+    <div class="chapter-title">Chương {{ chapter.number }}</div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
+      {{ book.get_testament_display }} • {{ book.get_group_display }}
+    </div>
+
+    <!-- Audio Player (if present) -->
+    {% if chapter.audio_url %}
+    <div class="audio-player-box">
+      <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent);">🎧 Nghe Audio:</span>
+      <audio controls src="{{ chapter.audio_url }}" style="height: 32px; max-width: 250px; outline: none;"></audio>
+    </div>
+    {% endif %}
+  </header>
+
+  <!-- Scripture Text -->
+  <article class="scripture-text">
+    {% if verses %}
+      {% for v in verses %}
+        {% if v.section_title %}
+          <div class="section-heading">{{ v.section_title }}</div>
+        {% endif %}
+        {% if v.sub_title %}
+          <div class="sub-heading">{{ v.sub_title }}</div>
+        {% endif %}
+
+        <span class="verse-item {% if v.id|in_set:user_bookmarks %}has-bookmark{% endif %} {% if v.id in user_notes %}has-note{% endif %}"
+              id="cau-{{ v.verse_number }}"
+              data-verse-id="{{ v.id }}"
+              data-verse-num="{{ v.verse_number }}"
+              data-verse-ref="{{ book.code }} {{ chapter.number }}, {{ v.verse_number }}"
+              data-verse-text="{{ v.text }}"
+              {% if v.id in user_highlights %}data-highlight="{{ user_highlights|get_item:v.id }}"{% endif %}
+              {% if v.id in user_notes %}data-note="{{ user_notes|get_item:v.id }}"{% endif %}>
+          <sup class="verse-num">{{ v.verse_number }}</sup>{{ v.text }}
+        </span>
+      {% endfor %}
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <p style="font-size: 1.1rem; margin-bottom: 1rem;">Nội dung chương này đang được hệ thống đồng bộ.</p>
+        <p style="font-size: 0.9rem;">Bạn có thể chạy lệnh crawler để nạp toàn bộ văn bản chương này:</p>
+        <code style="display: inline-block; background: var(--bg-subtle); padding: 0.5rem 1rem; border-radius: 6px; margin-top: 0.5rem;">
+          python manage.py import_bible --book {{ book.slug }} --start {{ chapter.number }} --end {{ chapter.number }}
+        </code>
+      </div>
+    {% endif %}
+  </article>
+
+  <!-- Guest Limit Lock Banner (If limit reached) -->
+  {% if limit_reached %}
+  <div style="margin-top: 2rem; padding: 2rem 1.5rem; background: var(--bg-surface); border: 2px dashed var(--accent); border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📖🔒</div>
+    <h3 style="font-family: var(--font-body); font-size: 1.35rem; color: var(--accent); margin-bottom: 0.5rem;">
+      Bạn đã hoàn thành 3 chương đọc thử miễn phí!
+    </h3>
+    <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 520px; margin: 0 auto 1.5rem; line-height: 1.6;">
+      Để đọc trọn vẹn chương này và toàn bộ 73 cuốn Kinh Thánh không giới hạn, đồng thời lưu Bookmark, bôi màu và ghi chú cá nhân, xin mời bạn đăng nhập nhanh:
+    </p>
+    <div style="max-width: 320px; margin: 0 auto;">
+      {% load socialaccount %}
+      <a href="{% provider_login_url 'google' %}" class="social-login-btn btn-google"
+         {% if not has_google_oauth %}onclick="alert('Chức năng Đăng nhập Google cần cấu hình GOOGLE_CLIENT_ID trong file .env.\n\nTrên máy Local, bạn hãy nhấn Đăng nhập hoặc Tạo tài khoản bằng Email để tiếp tục đọc không giới hạn!'); return false;"{% endif %}>
+        Tiếp tục với Google
+      </a>
+      <a href="{% provider_login_url 'facebook' %}" class="social-login-btn btn-facebook"
+         {% if not has_facebook_oauth %}onclick="alert('Chức năng Đăng nhập Facebook cần cấu hình FACEBOOK_CLIENT_ID trong file .env.\n\nTrên máy Local, bạn hãy nhấn Đăng nhập hoặc Tạo tài khoản bằng Email để tiếp tục đọc không giới hạn!'); return false;"{% endif %}>
+        Tiếp tục với Facebook
+      </a>
+      <div style="margin-top: 0.75rem;">
+        <a href="{% url 'account_login' %}" style="font-size: 0.85rem; color: var(--accent); font-weight: 600;">
+          Hoặc Đăng nhập bằng Email / Tên tài khoản
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Chapter Navigation -->
+  <nav class="chapter-nav-grid">
+    {% if prev_chapter %}
+    <a href="{% url 'bible:reader' prev_chapter.book.slug prev_chapter.number %}" class="nav-btn">
+      ← {{ prev_chapter.book.name }} (Chương {{ prev_chapter.number }})
+    </a>
+    {% else %}
+    <div></div>
+    {% endif %}
+
+    {% if next_chapter %}
+    <a href="{% url 'bible:reader' next_chapter.book.slug next_chapter.number %}" class="nav-btn">
+      {{ next_chapter.book.name }} (Chương {{ next_chapter.number }}) →
+    </a>
+    {% else %}
+    <div></div>
+    {% endif %}
+  </nav>
+</main>
+
+<!-- Floating Action Bar for Selected Verse -->
+<div id="verse-action-bar" class="verse-action-bar">
+  <!-- Color Highlights -->
+  <div class="action-color-dot dot-yellow" data-color="yellow" title="Bôi màu Vàng"></div>
+  <div class="action-color-dot dot-green" data-color="green" title="Bôi màu Xanh lá"></div>
+  <div class="action-color-dot dot-blue" data-color="blue" title="Bôi màu Xanh lam"></div>
+  <div class="action-color-dot dot-pink" data-color="pink" title="Bôi màu Hồng"></div>
+  <div class="action-color-dot dot-purple" data-color="purple" title="Bôi màu Tím"></div>
+  <div class="action-color-dot" data-color="none" title="Xóa bôi màu" style="background: transparent; border: 1px dashed var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 10px;">✕</div>
+
+  <span style="color: var(--border-color);">|</span>
+
+  <!-- Action buttons -->
+  <button id="action-bookmark" class="tool-btn" title="Đánh dấu câu này">🔖 Bookmark</button>
+  <button id="action-note" class="tool-btn" title="Thêm ghi chú suy niệm">📝 Ghi Chú</button>
+  <button id="action-share" class="tool-btn" title="Chia sẻ câu Lời Chúa">↗️ Chia Sẻ</button>
+</div>
+{% endblock %}

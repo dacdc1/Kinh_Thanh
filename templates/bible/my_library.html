@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Tủ Sách Cá Nhân - Kinh Thánh Công Giáo{% endblock %}
+
+{% block content %}
+<main class="canon-section" style="max-width: 850px;">
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-family: var(--font-body); font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem;">
+      Tủ Sách & Suy Niệm Cá Nhân
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      Quản lý toàn bộ câu Kinh Thánh bạn đã đánh dấu, bôi màu và ghi chú suy niệm trên mọi thiết bị.
+    </p>
+  </div>
+
+  <!-- Library Tabs -->
+  <div class="testament-tabs" style="justify-content: flex-start; margin-bottom: 1.5rem;">
+    <button class="tab-btn active" onclick="switchLibTab('bookmarks', this)">🔖 Đánh Dấu ({{ bookmarks|length }})</button>
+    <button class="tab-btn" onclick="switchLibTab('highlights', this)">🎨 Bôi Màu ({{ highlights|length }})</button>
+    <button class="tab-btn" onclick="switchLibTab('notes', this)">📝 Ghi Chú ({{ notes|length }})</button>
+    <button class="tab-btn" onclick="switchLibTab('history', this)">🕒 Lịch Sử Đọc</button>
+  </div>
+
+  <!-- 1. Bookmarks Tab -->
+  <div id="tab-sec-bookmarks" class="lib-section">
+    {% if bookmarks %}
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for b in bookmarks %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <a href="{% url 'bible:reader' b.verse.chapter.book.slug b.verse.chapter.number %}" style="font-weight: 700; color: var(--accent);">
+              {{ b.verse.chapter.book.name }} {{ b.verse.chapter.number }}, {{ b.verse.verse_number }}
+            </a>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">
+              Đánh dấu: {{ b.created_at|date:"d/m/Y H:i" }}
+            </span>
+          </div>
+          <p style="font-family: var(--font-body); font-size: 1.05rem; line-height: 1.6; color: var(--text-main);">
+            {{ b.verse.text }}
+          </p>
+          <div style="margin-top: 0.75rem; text-align: right;">
+            <a href="{% url 'bible:reader' b.verse.chapter.book.slug b.verse.chapter.number %}" style="font-size: 0.85rem; color: var(--gold); font-weight: 600;">
+              Mở đọc chương này →
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-muted);">
+        Chưa có câu nào được đánh dấu. Khi đọc sách, hãy chọn một câu và bấm nút <strong>Bookmark</strong>!
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- 2. Highlights Tab -->
+  <div id="tab-sec-highlights" class="lib-section" style="display: none;">
+    {% if highlights %}
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for h in highlights %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; border-left: 4px solid var(--hl-{{ h.color }});">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <a href="{% url 'bible:reader' h.verse.chapter.book.slug h.verse.chapter.number %}" style="font-weight: 700; color: var(--accent);">
+              {{ h.verse.chapter.book.name }} {{ h.verse.chapter.number }}, {{ h.verse.verse_number }}
+            </a>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Màu: {{ h.get_color_display }}</span>
+          </div>
+          <p style="font-family: var(--font-body); font-size: 1.05rem; line-height: 1.6; color: var(--text-main); background: var(--hl-{{ h.color }}); padding: 4px 8px; border-radius: 4px; display: inline-block;">
+            {{ h.verse.text }}
+          </p>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-muted);">
+        Chưa có câu nào được bôi màu.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- 3. Notes Tab -->
+  <div id="tab-sec-notes" class="lib-section" style="display: none;">
+    {% if notes %}
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for n in notes %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <a href="{% url 'bible:reader' n.verse.chapter.book.slug n.verse.chapter.number %}" style="font-weight: 700; color: var(--accent);">
+              {{ n.verse.chapter.book.name }} {{ n.verse.chapter.number }}, {{ n.verse.verse_number }}
+            </a>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">{{ n.updated_at|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div style="font-style: italic; font-size: 0.95rem; color: var(--text-muted); margin-bottom: 0.75rem; border-left: 2px solid var(--gold); padding-left: 0.5rem;">
+            “{{ n.verse.text }}”
+          </div>
+          <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.95rem; color: var(--text-main); line-height: 1.6;">
+            {{ n.content|linebreaksbr }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-muted);">
+        Chưa có ghi chú suy niệm nào.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- 4. History Tab -->
+  <div id="tab-sec-history" class="lib-section" style="display: none;">
+    {% if reading_history %}
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        {% for rh in reading_history %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 700; color: var(--text-main);">
+              {{ rh.chapter.book.name }} — Chương {{ rh.chapter.number }}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">
+              Đã đọc lúc: {{ rh.last_read_at|date:"d/m/Y H:i" }}
+            </div>
+          </div>
+          <a href="{% url 'bible:reader' rh.chapter.book.slug rh.chapter.number %}" class="tool-btn">
+            Đọc lại →
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-muted);">
+        Chưa có lịch sử đọc gần đây.
+      </div>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function switchLibTab(tabName, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.lib-section').forEach(s => s.style.display = 'none');
+
+    btn.classList.add('active');
+    document.getElementById(`tab-sec-${tabName}`).style.display = 'block';
+  }
+</script>
+{% endblock %}

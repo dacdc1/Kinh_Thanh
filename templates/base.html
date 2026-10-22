@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi" data-theme="sepia">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Kinh Thánh Công Giáo - Trọn Bộ 73 Cuốn{% endblock %}</title>
+  <meta name="description" content="Hệ thống đọc Kinh Thánh Công Giáo trực tuyến trọn bộ 73 cuốn. Hỗ trợ tìm kiếm toàn văn không dấu, đọc offline, kế hoạch đọc 1 năm, bôi màu, đánh dấu và ghi chú.">
+  
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{% static 'css/reader.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body data-auth="{% if user.is_authenticated %}true{% else %}false{% endif %}">
+  {% csrf_token %}
+
+  <!-- Top Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="{% url 'bible:home' %}" class="brand-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11 2h2v7h7v2h-7v11h-2V11H4V9h7V2z"/>
+        </svg>
+        <span>Kinh Thánh Công Giáo</span>
+      </a>
+
+      <ul class="nav-menu">
+        <li><a href="{% url 'bible:home' %}" class="nav-link">Trang Chủ</a></li>
+        <li><a href="{% url 'bible:reading_plan' %}" class="nav-link">Kế Hoạch 365 Ngày</a></li>
+        <li><a href="{% url 'bible:search' %}" class="nav-link">Tìm Kiếm</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'bible:my_library' %}" class="nav-link">Tủ Sách Của Tôi</a></li>
+        {% endif %}
+        {% if user.is_authenticated and user.is_staff %}
+        <li><a href="{% url 'accounts:admin_dashboard' %}" class="nav-link" style="color: var(--gold); font-weight: 600;">Quản Trị</a></li>
+        {% endif %}
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Search icon trigger -->
+        <a href="{% url 'bible:search' %}" class="tool-btn" title="Tìm kiếm câu Kinh Thánh">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </a>
+
+        {% if user.is_authenticated %}
+          {% if user.is_staff %}
+          <a href="{% url 'accounts:admin_dashboard' %}" class="tool-btn" style="background: var(--gold); color: #fff; border-color: var(--gold); font-weight: 600;" title="Bảng điều khiển quản trị">
+            📊 Quản Trị
+          </a>
+          {% endif %}
+          <a href="{% url 'accounts:profile' %}" class="tool-btn" style="border-color: var(--accent); color: var(--accent); font-weight: 600;">
+            👤 {{ user.first_name|default:user.username }}
+          </a>
+          <a href="{% url 'account_logout' %}" class="tool-btn" title="Đăng xuất">
+            Đăng xuất
+          </a>
+        {% else %}
+          {% if guest_read_count > 0 %}
+          <span style="font-size: 0.8rem; color: var(--text-muted); background: var(--bg-subtle); padding: 3px 8px; border-radius: 12px;">
+            Đọc thử: {{ guest_read_count }}/3
+          </span>
+          {% endif %}
+          <button onclick="showGuestLoginModal()" class="tool-btn" style="background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600;">
+            Đăng nhập
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+    <div style="max-width: 800px; margin: 1rem auto; padding: 0 1rem;">
+      {% for message in messages %}
+        <div style="padding: 0.75rem 1rem; border-radius: 6px; background: var(--bg-subtle); border-left: 4px solid var(--accent); font-size: 0.9rem;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Main Content Block -->
+  {% block content %}{% endblock %}
+
+  <!-- Guest Login Required Modal -->
+  <div id="guest-limit-modal" class="modal-overlay {% if is_guest_limit_reached %}active{% endif %}">
+    <div class="modal-card">
+      <button class="modal-close">&times;</button>
+      <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">🕊️</div>
+      <h3 style="font-family: var(--font-body); font-size: 1.4rem; color: var(--accent); margin-bottom: 0.5rem;">
+        Đồng hành cùng Lời Chúa mỗi ngày
+      </h3>
+      <p style="font-size: 0.925rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem;">
+        Bạn đang đọc với tư cách Khách vãng lai. Để <strong>tiếp tục đọc không giới hạn</strong> và mở khóa các quyền năng cao hơn (lưu Bookmark, bôi màu Highlight, ghi chú suy niệm và theo dõi kế hoạch đọc 365 ngày trên mọi thiết bị), xin mời bạn đăng nhập nhanh:
+      </p>
+
+      <!-- Google Login Button -->
+      {% load socialaccount %}
+      <a href="{% provider_login_url 'google' %}" class="social-login-btn btn-google"
+         {% if not has_google_oauth %}onclick="alert('Chức năng Đăng nhập Google cần cấu hình GOOGLE_CLIENT_ID trong file .env.\n\nTrên máy Local, bạn hãy nhấn Đăng nhập Email hoặc Đăng ký tài khoản mới bên dưới để sử dụng ngay!'); return false;"{% endif %}>
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Tiếp tục với Google</span>
+      </a>
+
+      <!-- Facebook Login Button -->
+      <a href="{% provider_login_url 'facebook' %}" class="social-login-btn btn-facebook"
+         {% if not has_facebook_oauth %}onclick="alert('Chức năng Đăng nhập Facebook cần cấu hình FACEBOOK_CLIENT_ID trong file .env.\n\nTrên máy Local, bạn hãy nhấn Đăng nhập Email hoặc Đăng ký tài khoản mới bên dưới để sử dụng ngay!'); return false;"{% endif %}>
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+        <span>Tiếp tục với Facebook</span>
+      </a>
+
+      <div style="margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted); position: relative;">
+        <span>hoặc</span>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; justify-content: center;">
+        <a href="{% url 'account_login' %}" style="font-size: 0.875rem; color: var(--accent); font-weight: 600;">Đăng nhập Email</a>
+        <span style="color: var(--text-muted);">•</span>
+        <a href="{% url 'account_signup' %}" style="font-size: 0.875rem; color: var(--accent); font-weight: 600;">Đăng ký tài khoản mới</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note Modal -->
+  <div id="note-modal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close">&times;</button>
+      <h3 style="font-family: var(--font-body); font-size: 1.25rem; color: var(--accent); margin-bottom: 0.75rem;">
+        Ghi chú suy niệm Lời Chúa
+      </h3>
+      <textarea id="note-modal-input" rows="5" placeholder="Nhập cảm nghiệm, suy niệm hoặc lời cầu nguyện của bạn về câu Kinh Thánh này..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--text-main); font-family: var(--font-ui); font-size: 0.95rem; resize: vertical; margin-bottom: 1rem; outline: none;"></textarea>
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button class="tool-btn modal-cancel">Hủy</button>
+        <button id="btn-save-note" class="tool-btn" style="background: var(--accent); color: #fff; border-color: var(--accent);">Lưu Ghi Chú</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="share-modal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close">&times;</button>
+      <h3 style="font-family: var(--font-body); font-size: 1.25rem; color: var(--accent); margin-bottom: 0.5rem;">
+        Chia sẻ câu Kinh Thánh
+      </h3>
+      <div class="quote-card-preview" id="quote-card-element">
+        <div class="quote-card-text" id="share-quote-text">“Lời Chúa là ngọn đèn soi cho con bước”</div>
+        <div class="quote-card-ref" id="share-quote-ref">Tv 119, 105</div>
+      </div>
+      <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+        <button id="btn-copy-quote" class="tool-btn" style="background: var(--accent); color: #fff; border-color: var(--accent); padding: 0.5rem 1rem;">
+          📋 Sao chép Lời Chúa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 900px; margin: 0 auto; line-height: 1.8;">
+      <p style="font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">
+        Kinh Thánh Công Giáo Trọn Bộ 73 Cuốn (46 Cựu Ước • 27 Tân Ước)
+      </p>
+      <p style="font-size: 0.85rem;">
+        Bản dịch của Nhóm Phiên Dịch Các Giờ Kinh Phụng Vụ (CGKPV). 
+      </p>
+      <p style="font-size: 0.8rem; margin-top: 0.75rem; color: var(--text-muted);">
+        Hệ thống được phát triển với tinh thần phục vụ cộng đồng dân Chúa học hỏi Lời Chúa mỗi ngày.
+      </p>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/reader.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: kinh-thanh-cong-giao
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn kinhthanh_project.wsgi:application --bind 0.0.0.0:$PORT --workers 3"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kinhthanh-db
+          property: connectionString
+
+databases:
+  - name: kinhthanh-db
+    databaseName: kinhthanh_db
+    user: kinhthanh_user
+    plan: free

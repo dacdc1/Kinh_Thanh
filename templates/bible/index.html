@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Kinh Thánh Công Giáo 73 Cuốn - Đọc Trực Tuyến & Học Hỏi Lời Chúa{% endblock %}
+
+{% block content %}
+<main class="canon-section">
+  <!-- Hero Section -->
+  <section class="section-hero">
+    <div style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); font-weight: 700; margin-bottom: 0.5rem;">
+      Lời Chúa là ngọn đèn soi cho con bước
+    </div>
+    <h1 class="hero-title">Kinh Thánh Công Giáo</h1>
+    <p class="hero-subtitle">
+      Trọn bộ 73 cuốn quy điển Hội Thánh (46 Cựu Ước & 27 Tân Ước). Giao diện tối giản, tập trung đọc sách, tra cứu không dấu và đồng bộ kế hoạch đọc 365 ngày.
+    </p>
+
+    <!-- Quick Search Form -->
+    <form action="{% url 'bible:search' %}" method="get" class="quick-search-box">
+      <input type="text" name="q" class="search-input" placeholder="Tra cứu câu (VD: Ga 3,16) hoặc tìm từ khóa không dấu..." autofocus>
+      <button type="submit" class="search-submit-btn">Tra Cứu</button>
+    </form>
+
+    <!-- Daily bread banner if available -->
+    {% if popular_verse %}
+    <div style="max-width: 600px; margin: 1.5rem auto 0; padding: 1rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; font-style: italic; font-size: 0.95rem; color: var(--text-main); line-height: 1.6; border-left: 3px solid var(--gold);">
+      “{{ popular_verse.text }}”
+      <div style="font-style: normal; font-weight: 700; font-size: 0.8rem; color: var(--accent); margin-top: 0.4rem; text-align: right;">
+        — {{ popular_verse.chapter.book.name }} {{ popular_verse.chapter.number }}, {{ popular_verse.verse_number }}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Testament Switcher Tabs -->
+  <div class="testament-tabs">
+    <button class="tab-btn active" id="tab-all" onclick="filterTestament('all')">Tất Cả 73 Cuốn</button>
+    <button class="tab-btn" id="tab-ot" onclick="filterTestament('ot')">Cựu Ước (46 Cuốn)</button>
+    <button class="tab-btn" id="tab-nt" onclick="filterTestament('nt')">Tân Ước (27 Cuốn)</button>
+  </div>
+
+  <!-- CỰU ƯỚC -->
+  <div id="section-ot">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-body); font-size: 1.75rem; color: var(--accent);">CỰU ƯỚC</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Gồm 46 cuốn sách chuẩn quy điển Công Giáo, chuẩn bị cho ơn Cứu Độ</p>
+    </div>
+
+    <!-- 1. Ngũ Thư -->
+    <h3 class="group-title">📜 I. Bộ Ngũ Thư (5 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in ot_pentateuch %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 2. Lịch Sử -->
+    <h3 class="group-title">🏰 II. Các Sách Lịch Sử (16 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in ot_history %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 3. Giáo Huấn & Khôn Ngoan -->
+    <h3 class="group-title">🕊️ III. Các Sách Giáo Huấn & Khôn Ngoan (7 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in ot_wisdom %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 4. Ngôn Sứ -->
+    <h3 class="group-title">📢 IV. Các Sách Ngôn Sứ (18 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in ot_prophets %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 3rem 0;">
+
+  <!-- TÂN ƯỚC -->
+  <div id="section-nt">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-body); font-size: 1.75rem; color: var(--accent);">TÂN ƯỚC</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Gồm 27 cuốn sách mạc khải trọn vẹn về Chúa Giêsu Kitô và Hội Thánh</p>
+    </div>
+
+    <!-- 5. Tin Mừng -->
+    <h3 class="group-title">📖 V. Bốn Sách Tin Mừng (4 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in nt_gospels %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card" style="border-top: 3px solid var(--accent);">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 6. Công Vụ Tông Đồ -->
+    <h3 class="group-title">⚡ VI. Lịch Sử Giáo Hội (1 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in nt_acts %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 7. Thư Thánh Phaolô -->
+    <h3 class="group-title">✉️ VII. Các Thư Của Thánh Phaolô (14 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in nt_pauline %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 8. Thư Chung -->
+    <h3 class="group-title">💌 VIII. Các Thư Chung Tông Đồ (7 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in nt_catholic %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 9. Khải Huyền -->
+    <h3 class="group-title">👑 IX. Sách Tiên Tri Cánh Chung (1 cuốn)</h3>
+    <div class="books-grid">
+      {% for b in nt_revelation %}
+      <a href="{% url 'bible:reader_book' b.slug %}" class="book-card" style="border-top: 3px solid var(--gold);">
+        <div class="book-card-header">
+          <span class="book-card-name">{{ b.order_num }}. {{ b.name }}</span>
+          <span class="book-card-code">{{ b.code }}</span>
+        </div>
+        <p class="book-card-desc">{{ b.description }}</p>
+        <div class="book-card-footer">{{ b.total_chapters }} chương</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function filterTestament(type) {
+    const secOT = document.getElementById('section-ot');
+    const secNT = document.getElementById('section-nt');
+    const btnAll = document.getElementById('tab-all');
+    const btnOT = document.getElementById('tab-ot');
+    const btnNT = document.getElementById('tab-nt');
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    if (type === 'ot') {
+      secOT.style.display = 'block';
+      secNT.style.display = 'none';
+      btnOT.classList.add('active');
+    } else if (type === 'nt') {
+      secOT.style.display = 'none';
+      secNT.style.display = 'block';
+      btnNT.classList.add('active');
+    } else {
+      secOT.style.display = 'block';
+      secNT.style.display = 'block';
+      btnAll.classList.add('active');
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Hồ Sơ Độc Giả - {{ user.username }}{% endblock %}
+
+{% block content %}
+<main class="canon-section" style="max-width: 800px;">
+  <!-- Profile Header -->
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px; padding: 2rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+    <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--accent)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700;">
+      {{ user.first_name|default:user.username|make_list|first|upper }}
+    </div>
+    <div>
+      <h1 style="font-family: var(--font-body); font-size: 1.6rem; color: var(--accent); margin-bottom: 0.2rem;">
+        {{ user.first_name|default:user.username }}
+      </h1>
+      <p style="font-size: 0.9rem; color: var(--text-muted);">
+        Thành viên Kinh Thánh • Email: {{ user.email|default:"Chưa cập nhật" }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <h2 style="font-family: var(--font-body); font-size: 1.25rem; color: var(--text-main); margin-bottom: 1rem;">
+    Thống Kê Đọc Lời Chúa
+  </h2>
+  
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <!-- Stat 1 -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">{{ total_chapters_read }} / 1,328</div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Chương đã đọc ({{ progress_percentage }}%)</div>
+    </div>
+
+    <!-- Stat 2 -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--gold);">{{ total_plan_days_done }} / 365</div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Ngày kế hoạch 1 năm ({{ plan_percentage }}%)</div>
+    </div>
+
+    <!-- Stat 3 -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-main);">{{ total_bookmarks }}</div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Câu đã đánh dấu (Bookmarks)</div>
+    </div>
+
+    <!-- Stat 4 -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; text-align: center;">
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-main);">{{ total_notes }}</div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Ghi chú suy niệm</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 1rem; justify-content: center;">
+    <a href="{% url 'bible:home' %}" class="tool-btn" style="background: var(--accent); color: #fff; border-color: var(--accent); padding: 0.65rem 1.25rem;">
+      Tiếp tục đọc Kinh Thánh
+    </a>
+    <a href="{% url 'bible:my_library' %}" class="tool-btn" style="padding: 0.65rem 1.25rem;">
+      Vào Tủ Sách Cá Nhân
+    </a>
+  </div>
+</main>
+{% endblock %}

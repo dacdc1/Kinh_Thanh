@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Bảng Điều Khiển Quản Trị Kinh Thánh{% endblock %}
+
+{% block content %}
+<main class="canon-section" style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+  
+  <!-- Dashboard Header -->
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.75rem 2rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.25rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem;">
+        <span style="font-size: 1.8rem;">🕊️</span>
+        <h1 style="font-family: var(--font-body); font-size: 1.75rem; color: var(--accent); margin: 0;">
+          Bảng Điều Khiển Quản Trị (Admin Dashboard)
+        </h1>
+        <span style="background: var(--accent-light); color: var(--accent); font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">
+          Admin
+        </span>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+        Giám sát người dùng, dữ liệu 73 cuốn Kinh Thánh, tiến độ đọc và tương tác toàn hệ thống.
+      </p>
+    </div>
+
+    <!-- Quick action buttons -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="/admin/" target="_blank" class="tool-btn" style="background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; padding: 0.6rem 1.1rem;">
+        ⚙️ Mở Django Admin
+      </a>
+      <a href="{% url 'bible:home' %}" class="tool-btn" style="padding: 0.6rem 1.1rem;">
+        📖 Trang Chủ Đọc Sách
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Overview Grid (4 Cards) -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+    
+    <!-- KPI 1: Users -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Độc Giả & Thành Viên</span>
+        <span style="font-size: 1.4rem;">👥</span>
+      </div>
+      <div style="font-size: 2.2rem; font-weight: 700; color: var(--accent); line-height: 1;">
+        {{ total_users }}
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
+        <span>• Mới trong 7 ngày: <strong style="color: #16a34a;">+{{ new_users_7d }}</strong></span>
+        <span>• Đang đọc tích cực: <strong>{{ active_readers }}</strong> độc giả</span>
+        <span>• Tham gia kế hoạch 1 năm: <strong>{{ plan_participants }}</strong></span>
+      </div>
+    </div>
+
+    <!-- KPI 2: Scripture Canon -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Kho Dữ Liệu Kinh Thánh</span>
+        <span style="font-size: 1.4rem;">📚</span>
+      </div>
+      <div style="font-size: 2.2rem; font-weight: 700; color: var(--gold); line-height: 1;">
+        {{ total_books }} <span style="font-size: 1rem; font-weight: 500; color: var(--text-muted);">Cuốn</span>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
+        <span>• Cựu Ước: <strong>{{ ot_books_count }}</strong> • Tân Ước: <strong>{{ nt_books_count }}</strong></span>
+        <span>• Tổng số chương: <strong>{{ total_chapters }}</strong> chương</span>
+        <span>• Số câu đã nạp: <strong>{{ total_verses }}</strong> câu ({{ books_with_verses }}/73 cuốn)</span>
+      </div>
+    </div>
+
+    <!-- KPI 3: Annotations & Interactions -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Tương Tác Độc Giả</span>
+        <span style="font-size: 1.4rem;">🔖</span>
+      </div>
+      <div style="font-size: 2.2rem; font-weight: 700; color: var(--text-main); line-height: 1;">
+        {{ total_highlights|add:total_bookmarks|add:total_notes }}
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
+        <span>• Đánh dấu câu (Bookmark): <strong>{{ total_bookmarks }}</strong></span>
+        <span>• Đoạn bôi màu (Highlight): <strong>{{ total_highlights }}</strong></span>
+        <span>• Ghi chú suy niệm: <strong>{{ total_notes }}</strong></span>
+      </div>
+    </div>
+
+    <!-- KPI 4: Reading Progress -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Tiến Độ Đọc Lời Chúa</span>
+        <span style="font-size: 1.4rem;">📈</span>
+      </div>
+      <div style="font-size: 2.2rem; font-weight: 700; color: #2563eb; line-height: 1;">
+        {{ total_read_events }}
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
+        <span>• Lượt chương hoàn thành: <strong>{{ total_read_events }}</strong></span>
+        <span>• Ngày đọc 365 hoàn tất: <strong>{{ total_plan_days_done }}</strong></span>
+        <span>• Giới hạn khách vãng lai: <strong>{{ system_info.guest_max_free }}</strong> chương</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Deep Dive Analytics: Highlights & Popular Verses (2 Columns) -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <!-- Left Column: Highlight Palette Breakdown & Top Bookmarks -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <h2 style="font-family: var(--font-body); font-size: 1.15rem; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        🎨 Phân Bố Sắc Thái Bôi Màu (Highlight Colors)
+      </h2>
+      
+      {% if total_highlights > 0 %}
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.75rem;">
+          {% for stat in highlight_color_stats %}
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.25rem;">
+              <span style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: {{ stat.hex }}; border: 1px solid rgba(0,0,0,0.15);"></span>
+                {{ stat.name }}
+              </span>
+              <span style="color: var(--text-muted); font-weight: 600;">
+                {{ stat.count }} lượt ({{ stat.percentage }}%)
+              </span>
+            </div>
+            <div style="background: var(--bg-subtle); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: {{ stat.hex }}; width: {{ stat.percentage }}%; height: 100%; border-radius: 4px;"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; font-style: italic;">
+          Chưa có dữ liệu bôi màu từ người dùng.
+        </p>
+      {% endif %}
+
+      <h3 style="font-family: var(--font-body); font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+        🔖 Top Câu Kinh Thánh Được Đánh Dấu Nhiều Nhất
+      </h3>
+      {% if top_bookmarked_verses %}
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          {% for v in top_bookmarked_verses %}
+          <div style="padding: 0.6rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.875rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">
+              <strong style="color: var(--accent);">{{ v.chapter.book.code }} {{ v.chapter.number }}, {{ v.verse_number }}:</strong>
+              <span style="color: var(--text-muted); margin-left: 0.35rem;">"{{ v.text|truncatechars:50 }}"</span>
+            </div>
+            <span style="background: var(--accent-light); color: var(--accent); font-weight: 700; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">
+              {{ v.count }} lượt
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">Chưa có dữ liệu bookmark.</p>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Top Highlights & Recent Notes -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <h2 style="font-family: var(--font-body); font-size: 1.15rem; color: var(--text-main); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        ✨ Top Câu Được Bôi Màu Highlight Nhiều Nhất
+      </h2>
+      {% if top_highlighted_verses %}
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.75rem;">
+          {% for v in top_highlighted_verses %}
+          <div style="padding: 0.6rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.875rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">
+              <strong style="color: var(--gold);">{{ v.chapter.book.code }} {{ v.chapter.number }}, {{ v.verse_number }}:</strong>
+              <span style="color: var(--text-muted); margin-left: 0.35rem;">"{{ v.text|truncatechars:50 }}"</span>
+            </div>
+            <span style="background: #fef08a; color: #854d0e; font-weight: 700; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">
+              {{ v.count }} lượt
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem;">Chưa có dữ liệu bôi màu.</p>
+      {% endif %}
+
+      <h3 style="font-family: var(--font-body); font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+        📝 Ghi Chú Suy Niệm Gần Đây
+      </h3>
+      {% if recent_notes %}
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          {% for note in recent_notes %}
+          <div style="padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+              <span style="font-weight: 600; color: var(--accent);">👤 {{ note.user.username }}</span>
+              <span style="color: var(--text-muted); font-size: 0.75rem;">{{ note.updated_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div style="color: var(--gold); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.25rem;">
+              Tại {{ note.verse.chapter.book.name }} ({{ note.verse.chapter.book.code }} {{ note.verse.chapter.number }}, {{ note.verse.verse_number }})
+            </div>
+            <div style="color: var(--text-main); font-style: italic; line-height: 1.4;">
+              "{{ note.content|truncatechars:80 }}"
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">Chưa có ghi chú suy niệm nào.</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Recent Users Management Table -->
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+      <h2 style="font-family: var(--font-body); font-size: 1.25rem; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+        👤 Quản Lý Người Dùng & Tiến Độ Đọc
+      </h2>
+      <a href="/admin/auth/user/" target="_blank" style="font-size: 0.85rem; color: var(--accent); font-weight: 600; text-decoration: underline;">
+        Xem toàn bộ trong Django Admin →
+      </a>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-muted);">
+            <th style="padding: 0.75rem 0.5rem;">Tên Người Dùng</th>
+            <th style="padding: 0.75rem 0.5rem;">Email</th>
+            <th style="padding: 0.75rem 0.5rem;">Ngày Tham Gia</th>
+            <th style="padding: 0.75rem 0.5rem; text-align: center;">Chương Đã Đọc</th>
+            <th style="padding: 0.75rem 0.5rem; text-align: center;">Bookmark</th>
+            <th style="padding: 0.75rem 0.5rem; text-align: center;">Ghi Chú</th>
+            <th style="padding: 0.75rem 0.5rem; text-align: center;">Vai Trò</th>
+            <th style="padding: 0.75rem 0.5rem; text-align: right;">Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in recent_users %}
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 0.75rem 0.5rem; font-weight: 600; color: var(--text-main);">
+              👤 {{ u.username }}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; color: var(--text-muted);">
+              {{ u.email|default:"(Chưa có)" }}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; color: var(--text-muted);">
+              {{ u.date_joined|date:"d/m/Y H:i" }}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; text-align: center; font-weight: 700; color: var(--accent);">
+              {{ u.chapters_read }}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; text-align: center;">
+              {{ u.bookmarks_count }}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; text-align: center;">
+              {{ u.notes_count }}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; text-align: center;">
+              {% if u.is_superuser %}
+                <span style="background: #ef4444; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Superadmin</span>
+              {% elif u.is_staff %}
+                <span style="background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Staff</span>
+              {% else %}
+                <span style="background: var(--bg-subtle); color: var(--text-muted); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">Độc giả</span>
+              {% endif %}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; text-align: right;">
+              <a href="/admin/auth/user/{{ u.id }}/change/" target="_blank" class="tool-btn" style="padding: 2px 8px; font-size: 0.75rem;">
+                Sửa quyền ↗
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+              Chưa có người dùng nào được tạo.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- System Specifications & Quick Tools Footer -->
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem 1.75rem; font-size: 0.825rem; color: var(--text-muted); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+      <span><strong>Hệ quản trị CSDL:</strong> {{ system_info.db_vendor }}</span>
+      <span><strong>Django:</strong> v{{ system_info.django_version }}</span>
+      <span><strong>Python:</strong> v{{ system_info.python_version }}</span>
+      <span><strong>Chế độ:</strong> {% if system_info.debug_mode %}<span style="color: #eab308; font-weight: 600;">DEBUG (Local)</span>{% else %}<span style="color: #22c55e; font-weight: 600;">PRODUCTION</span>{% endif %}</span>
+      <span><strong>Thời gian máy chủ:</strong> {{ system_info.server_time|date:"d/m/Y H:i:s" }}</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="/admin/bible/book/" target="_blank" class="tool-btn" style="padding: 3px 8px; font-size: 0.75rem;">Quản lý Sách (73)</a>
+      <a href="/admin/bible/verse/" target="_blank" class="tool-btn" style="padding: 3px 8px; font-size: 0.75rem;">Quản lý Câu</a>
+      <a href="/admin/bible/readingplan/" target="_blank" class="tool-btn" style="padding: 3px 8px; font-size: 0.75rem;">Kế Hoạch 365 Ngày</a>
+    </div>
+  </div>
+
+</main>
+{% endblock %}
